@@ -1,66 +1,32 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import os
 
-# Configuration de la page pour mobile et cloud
+# Configuration de la page
 st.set_page_config(
     page_title="💰 Budget Mobile",
     page_icon="💰",
     layout="wide",
-    initial_sidebar_state="collapsed"  # Sidebar fermée par défaut sur mobile
+    initial_sidebar_state="collapsed"
 )
 
-# CSS pour optimiser l'affichage mobile
+# CSS pour mobile
 st.markdown("""
 <style>
-    .main > div {
-        padding-top: 1rem;
-    }
-    
-    .stMetric {
-        background-color: #f0f2f6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 0.5rem 0;
-    }
-    
-    .stSelectbox > div > div {
-        font-size: 16px; /* Évite le zoom sur iOS */
-    }
-    
-    .stDateInput > div > div {
-        font-size: 16px;
-    }
-    
-    .stTextInput > div > div > input {
-        font-size: 16px;
-    }
-    
-    /* Optimiser les graphiques pour mobile */
-    .js-plotly-plot {
-        width: 100% !important;
-    }
-    
-    /* Boutons plus grands pour le tactile */
-    .stButton > button {
-        width: 100%;
-        height: 3rem;
-        font-size: 16px;
-    }
-    
-    /* Masquer les éléments non essentiels sur mobile */
-    @media (max-width: 768px) {
-        .stSidebar {
-            display: none;
-        }
-    }
+    .main > div { padding-top: 1rem; }
+    .stMetric { background-color: #f0f2f6; padding: 1rem; border-radius: 0.5rem; margin: 0.5rem 0; }
+    .stSelectbox > div > div { font-size: 16px; }
+    .stDateInput > div > div { font-size: 16px; }
+    .stTextInput > div > div > input { font-size: 16px; }
+    .js-plotly-plot { width: 100% !important; }
+    .stButton > button { width: 100%; height: 3rem; font-size: 16px; }
+    @media (max-width: 768px) { .stSidebar { display: none; } }
 </style>
 """, unsafe_allow_html=True)
 
-# Titre principal
+# Titre
 st.title("💰 Budget Personnel")
 st.markdown("---")
 
@@ -69,15 +35,13 @@ st.markdown("---")
 def load_data():
     """Charge les données depuis le fichier CSV ou crée des données d'exemple"""
     try:
-        # Essayer de charger le fichier CSV
         df = pd.read_csv("transactions_complete.csv")
         df['date'] = pd.to_datetime(df['date'])
         return df
     except FileNotFoundError:
-        # Créer des données d'exemple si le fichier n'existe pas
+        # Créer des données d'exemple simples
         st.warning("⚠️ Fichier de données non trouvé. Affichage de données d'exemple.")
         
-        # Créer des données d'exemple
         sample_data = {
             'date': pd.date_range('2025-07-01', periods=30, freq='D'),
             'description': [
