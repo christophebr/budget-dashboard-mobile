@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 from datetime import datetime, timedelta
 import os
 
@@ -20,7 +19,6 @@ st.markdown("""
     .stSelectbox > div > div { font-size: 16px; }
     .stDateInput > div > div { font-size: 16px; }
     .stTextInput > div > div > input { font-size: 16px; }
-    .js-plotly-plot { width: 100% !important; }
     .stButton > button { width: 100%; height: 3rem; font-size: 16px; }
     @media (max-width: 768px) { .stSidebar { display: none; } }
 </style>
@@ -30,70 +28,72 @@ st.markdown("""
 st.title("💰 Budget Personnel")
 st.markdown("---")
 
+# Créer des données d'exemple
+def create_sample_data():
+    """Crée des données d'exemple pour la démonstration"""
+    sample_data = {
+        'date': pd.date_range('2025-07-01', periods=30, freq='D'),
+        'description': [
+            'Virement salaire', 'Achat CB supermarché', 'Prélèvement assurance',
+            'Virement remboursement', 'Achat CB restaurant', 'Prélèvement électricité',
+            'Virement prime', 'Achat CB transport', 'Prélèvement téléphone',
+            'Virement bonus', 'Achat CB pharmacie', 'Prélèvement internet',
+            'Virement freelance', 'Achat CB vêtements', 'Prélèvement assurance auto',
+            'Virement dividende', 'Achat CB essence', 'Prélèvement mutuelle',
+            'Virement remboursement', 'Achat CB loisirs', 'Prélèvement crédit',
+            'Virement prime', 'Achat CB alimentation', 'Prélèvement gaz',
+            'Virement bonus', 'Achat CB culture', 'Prélèvement assurance habitation',
+            'Virement freelance', 'Achat CB santé', 'Prélèvement épargne'
+        ],
+        'amount': [
+            2500, -45.50, -89.90, 150, -23.80, -67.20, 300, -12.50, -35.40,
+            500, -18.70, -42.10, 800, -156.30, -125.60, 75, -58.90, -78.20,
+            200, -34.50, -89.10, 400, -67.80, -45.30, 600, -23.40, -56.70,
+            900, -89.20, -34.60
+        ],
+        'source_file': ['exemple.pdf'] * 30
+    }
+    
+    df = pd.DataFrame(sample_data)
+    df['date'] = pd.to_datetime(df['date'])
+    return df
+
 # Charger les données
 @st.cache_data
 def load_data():
     """Charge les données depuis le fichier CSV ou crée des données d'exemple"""
     try:
+        # Essayer de charger le fichier CSV
         df = pd.read_csv("transactions_complete.csv")
         df['date'] = pd.to_datetime(df['date'])
         return df
     except FileNotFoundError:
-        # Créer des données d'exemple simples
+        # Créer des données d'exemple si le fichier n'existe pas
         st.warning("⚠️ Fichier de données non trouvé. Affichage de données d'exemple.")
-        
-        sample_data = {
-            'date': pd.date_range('2025-07-01', periods=30, freq='D'),
-            'description': [
-                'Virement salaire', 'Achat CB supermarché', 'Prélèvement assurance',
-                'Virement remboursement', 'Achat CB restaurant', 'Prélèvement électricité',
-                'Virement prime', 'Achat CB transport', 'Prélèvement téléphone',
-                'Virement bonus', 'Achat CB pharmacie', 'Prélèvement internet',
-                'Virement freelance', 'Achat CB vêtements', 'Prélèvement assurance auto',
-                'Virement dividende', 'Achat CB essence', 'Prélèvement mutuelle',
-                'Virement remboursement', 'Achat CB loisirs', 'Prélèvement crédit',
-                'Virement prime', 'Achat CB alimentation', 'Prélèvement gaz',
-                'Virement bonus', 'Achat CB culture', 'Prélèvement assurance habitation',
-                'Virement freelance', 'Achat CB santé', 'Prélèvement épargne'
-            ],
-            'amount': [
-                2500, -45.50, -89.90, 150, -23.80, -67.20, 300, -12.50, -35.40,
-                500, -18.70, -42.10, 800, -156.30, -125.60, 75, -58.90, -78.20,
-                200, -34.50, -89.10, 400, -67.80, -45.30, 600, -23.40, -56.70,
-                900, -89.20, -34.60
-            ],
-            'source_file': ['exemple.pdf'] * 30
-        }
-        
-        df = pd.DataFrame(sample_data)
-        return df
+        return create_sample_data()
 
 # Charger les données
 df = load_data()
 
 if df is not None and not df.empty:
-    # Filtres mobiles (en haut de page)
+    # Filtres
     st.subheader("🔍 Filtres")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        # Filtre par période
         min_date = df['date'].min().date()
         max_date = df['date'].max().date()
-        
         date_range = st.date_input(
             "Période",
             value=(min_date, max_date),
             min_value=min_date,
-            max_value=max_date,
-            key="mobile_date_filter"
+            max_date=max_date
         )
     
     with col2:
-        # Filtre par source
         sources = ['Tous'] + list(df['source_file'].unique())
-        selected_source = st.selectbox("Fichier source", sources, key="mobile_source_filter")
+        selected_source = st.selectbox("Fichier source", sources)
     
     # Appliquer les filtres
     filtered_df = df.copy()
@@ -108,7 +108,7 @@ if df is not None and not df.empty:
     if selected_source != 'Tous':
         filtered_df = filtered_df[filtered_df['source_file'] == selected_source]
     
-    # Métriques principales (optimisées pour mobile)
+    # Métriques
     st.subheader("📊 Résumé")
     
     col1, col2 = st.columns(2)
@@ -121,38 +121,24 @@ if df is not None and not df.empty:
         total_expenses = filtered_df[filtered_df['amount'] < 0]['amount'].sum()
         st.metric("💸 Dépenses", f"{total_expenses:,.0f} €")
     
-    # Solde net (pleine largeur)
     net_balance = filtered_df['amount'].sum()
     st.metric("⚖️ Solde Net", f"{net_balance:,.0f} €")
     
-    # Note sur les soldes
     st.info("ℹ️ Les soldes de compte ne sont pas comptés comme des revenus ou dépenses.")
     
     st.markdown("---")
     
-    # Graphiques optimisés pour mobile
+    # Graphique simple avec matplotlib au lieu de plotly
     st.subheader("📈 Évolution du Solde")
     
-    # Calculer le solde cumulé
     filtered_df_sorted = filtered_df.sort_values('date')
     filtered_df_sorted['cumulative_balance'] = filtered_df_sorted['amount'].cumsum()
     
-    fig_balance = px.line(
-        filtered_df_sorted, 
-        x='date', 
-        y='cumulative_balance',
-        title="Évolution du solde",
-        labels={'cumulative_balance': 'Solde (€)', 'date': 'Date'},
-        height=300  # Hauteur réduite pour mobile
-    )
-    fig_balance.update_layout(
-        font_size=12,
-        title_font_size=16,
-        margin=dict(l=0, r=0, t=30, b=0)
-    )
-    st.plotly_chart(fig_balance, use_container_width=True)
+    # Utiliser st.line_chart au lieu de plotly
+    chart_data = filtered_df_sorted.set_index('date')['cumulative_balance']
+    st.line_chart(chart_data)
     
-    # Répartition des montants
+    # Répartition simple
     st.subheader("📊 Répartition des Montants")
     
     # Créer des catégories de montants
@@ -164,33 +150,22 @@ if df is not None and not df.empty:
     
     category_counts = filtered_df['amount_category'].value_counts()
     
-    fig_pie = px.pie(
-        values=category_counts.values,
-        names=category_counts.index,
-        title="Répartition par catégorie",
-        height=300
-    )
-    fig_pie.update_layout(
-        font_size=12,
-        title_font_size=16,
-        margin=dict(l=0, r=0, t=30, b=0)
-    )
-    st.plotly_chart(fig_pie, use_container_width=True)
+    # Utiliser st.bar_chart au lieu de plotly
+    st.bar_chart(category_counts)
     
-    # Transactions récentes (tableau simplifié)
+    # Transactions
     st.subheader("📋 Transactions Récentes")
     
-    # Options d'affichage
     col1, col2 = st.columns(2)
     
     with col1:
-        show_income_only = st.checkbox("Revenus uniquement", key="mobile_income_filter")
-        show_expenses_only = st.checkbox("Dépenses uniquement", key="mobile_expenses_filter")
+        show_income_only = st.checkbox("Revenus uniquement")
+        show_expenses_only = st.checkbox("Dépenses uniquement")
     
     with col2:
-        search_term = st.text_input("Rechercher", key="mobile_search", placeholder="Description...")
+        search_term = st.text_input("Rechercher", placeholder="Description...")
     
-    # Appliquer les filtres supplémentaires
+    # Appliquer les filtres
     display_df = filtered_df.copy()
     
     if show_income_only:
@@ -202,20 +177,19 @@ if df is not None and not df.empty:
     if search_term:
         display_df = display_df[display_df['description'].str.contains(search_term, case=False, na=False)]
     
-    # Afficher les 20 dernières transactions
+    # Afficher les transactions
     if not display_df.empty:
         display_df_formatted = display_df.copy()
         display_df_formatted['date'] = display_df_formatted['date'].dt.strftime('%d/%m')
         display_df_formatted['amount'] = display_df_formatted['amount'].apply(lambda x: f"{x:+.0f} €")
         
-        # Afficher seulement les colonnes essentielles
         st.dataframe(
             display_df_formatted[['date', 'description', 'amount']].head(20),
             use_container_width=True,
             height=400
         )
         
-        # Bouton de téléchargement
+        # Export
         csv = display_df.to_csv(index=False, encoding='utf-8')
         st.download_button(
             label="📥 Télécharger les données (CSV)",
@@ -226,7 +200,7 @@ if df is not None and not df.empty:
     else:
         st.info("Aucune transaction ne correspond aux critères sélectionnés.")
     
-    # Statistiques rapides
+    # Statistiques
     with st.expander("📊 Statistiques Rapides"):
         col1, col2 = st.columns(2)
         
@@ -242,7 +216,7 @@ if df is not None and not df.empty:
             for idx, row in top_revenus.iterrows():
                 st.write(f"• {row['description'][:30]}... + {row['amount']:,.0f} €")
     
-    # Instructions pour utiliser avec de vraies données
+    # Instructions
     if 'exemple.pdf' in df['source_file'].values:
         st.info("""
         **📁 Pour utiliser vos vraies données :**

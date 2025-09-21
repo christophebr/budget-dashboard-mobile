@@ -1,0 +1,26 @@
+# Ignorer les fichiers qui ne sont pas nécessaires pour l'application Streamlit
+extract_all_transactions.py
+extract_pdf_data.py
+extract_pdf_data_improved.py
+extract_pdf_simple.py
+extract_table_pdf.py
+diagnose_pdf.py
+extract_banque_postale.py
+detailed_diagnose.py
+find_table_patterns.py
+extract_transactions_final.py
+extract_real_transactions.py
+dashboard.py
+dashboard_mobile.py
+run_dashboard.py
+run_mobile.py
+verify_data.py
+create_sample_data.py
+deploy.py
+setup_github.py
+deploy_streamlit.py
+*.csv
+*.pdf
+releve/
+__pycache__/
+*.pyc
