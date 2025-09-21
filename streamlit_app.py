@@ -67,14 +67,42 @@ st.markdown("---")
 # Charger les données
 @st.cache_data
 def load_data():
-    """Charge les données depuis le fichier CSV"""
+    """Charge les données depuis le fichier CSV ou crée des données d'exemple"""
     try:
+        # Essayer de charger le fichier CSV
         df = pd.read_csv("transactions_complete.csv")
         df['date'] = pd.to_datetime(df['date'])
         return df
     except FileNotFoundError:
-        st.error("Fichier transactions_complete.csv non trouvé. Veuillez d'abord exécuter le script d'extraction.")
-        return None
+        # Créer des données d'exemple si le fichier n'existe pas
+        st.warning("⚠️ Fichier de données non trouvé. Affichage de données d'exemple.")
+        
+        # Créer des données d'exemple
+        sample_data = {
+            'date': pd.date_range('2025-07-01', periods=30, freq='D'),
+            'description': [
+                'Virement salaire', 'Achat CB supermarché', 'Prélèvement assurance',
+                'Virement remboursement', 'Achat CB restaurant', 'Prélèvement électricité',
+                'Virement prime', 'Achat CB transport', 'Prélèvement téléphone',
+                'Virement bonus', 'Achat CB pharmacie', 'Prélèvement internet',
+                'Virement freelance', 'Achat CB vêtements', 'Prélèvement assurance auto',
+                'Virement dividende', 'Achat CB essence', 'Prélèvement mutuelle',
+                'Virement remboursement', 'Achat CB loisirs', 'Prélèvement crédit',
+                'Virement prime', 'Achat CB alimentation', 'Prélèvement gaz',
+                'Virement bonus', 'Achat CB culture', 'Prélèvement assurance habitation',
+                'Virement freelance', 'Achat CB santé', 'Prélèvement épargne'
+            ],
+            'amount': [
+                2500, -45.50, -89.90, 150, -23.80, -67.20, 300, -12.50, -35.40,
+                500, -18.70, -42.10, 800, -156.30, -125.60, 75, -58.90, -78.20,
+                200, -34.50, -89.10, 400, -67.80, -45.30, 600, -23.40, -56.70,
+                900, -89.20, -34.60
+            ],
+            'source_file': ['exemple.pdf'] * 30
+        }
+        
+        df = pd.DataFrame(sample_data)
+        return df
 
 # Charger les données
 df = load_data()
@@ -250,16 +278,19 @@ if df is not None and not df.empty:
             for idx, row in top_revenus.iterrows():
                 st.write(f"• {row['description'][:30]}... + {row['amount']:,.0f} €")
     
+    # Instructions pour utiliser avec de vraies données
+    if 'exemple.pdf' in df['source_file'].values:
+        st.info("""
+        **📁 Pour utiliser vos vraies données :**
+        
+        1. Placez vos relevés PDF dans le dossier `releve/`
+        2. Exécutez : `python extract_all_transactions.py`
+        3. Le fichier `transactions_complete.csv` sera créé
+        4. Rechargez cette page pour voir vos données
+        """)
+    
 else:
-    st.error("Aucune donnée disponible. Veuillez d'abord exécuter le script d'extraction des PDFs.")
-    
-    st.info("""
-    **Instructions pour utiliser le dashboard mobile:**
-    
-    1. Placez vos relevés de compte PDF dans le dossier `releve/`
-    2. Exécutez le script d'extraction: `python extract_all_transactions.py`
-    3. Rechargez cette page pour voir vos données
-    """)
+    st.error("Aucune donnée disponible.")
 
 # Footer
 st.markdown("---")
