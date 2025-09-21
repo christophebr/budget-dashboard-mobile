@@ -88,7 +88,7 @@ if df is not None and not df.empty:
             "Période",
             value=(min_date, max_date),
             min_value=min_date,
-            max_date=max_date
+            max_value=max_date
         )
     
     with col2:
